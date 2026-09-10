@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spejderlyd</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F6F3EC;
+      --surface: #FFFFFF;
+      --ink: #1F2A22;
+      --muted: #6B7A6E;
+      --accent: #C1531B;
+      --accent-ink: #FFF7EE;
+      --line: #E4DDC9;
+      --danger: #A6341A;
+      --ring-track: #EADFC7;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #1B2119;
+        --surface: #232B22;
+        --ink: #F3EFE3;
+        --muted: #9FAE9C;
+        --accent: #E07A3E;
+        --accent-ink: #241206;
+        --line: #34402F;
+        --ring-track: #2C3629;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #1B2119;
+      --surface: #232B22;
+      --ink: #F3EFE3;
+      --muted: #9FAE9C;
+      --accent: #E07A3E;
+      --accent-ink: #241206;
+      --line: #34402F;
+      --ring-track: #2C3629;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 16px;
+    }
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 32px 26px 28px;
+      text-align: center;
+      box-shadow: 0 1px 2px rgba(20, 20, 10, 0.04);
+    }
+    .eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 14px;
+    }
+    .heading {
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 600;
+      font-size: 1.7rem;
+      line-height: 1.15;
+      margin: 0 0 4px;
+      text-wrap: balance;
+    }
+    .heading .q {
+      display: block;
+      color: var(--accent);
+      font-size: 2.1rem;
+      margin-top: 2px;
+    }
+    .instructions {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin: 10px 0 26px;
+      line-height: 1.45;
+    }
+
+    .rec-area { position: relative; width: 172px; height: 172px; margin: 0 auto 18px; }
+    .rec-area svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+    .rec-area circle.track { fill: none; stroke: var(--ring-track); stroke-width: 5; }
+    .rec-area circle.progress {
+      fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round;
+      transition: stroke-dashoffset 0.15s linear;
+    }
+    button.rec-btn {
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      border: none;
+      background: var(--accent);
+      color: var(--accent-ink);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    button.rec-btn:hover { filter: brightness(1.04); }
+    button.rec-btn:active { transform: scale(0.97); }
+    button.rec-btn svg { width: 40px; height: 40px; }
+    button.rec-btn.recording {
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(193, 83, 27, 0.35); }
+      50% { box-shadow: 0 0 0 14px rgba(193, 83, 27, 0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      button.rec-btn.recording { animation: none; }
+    }
+
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      min-height: 1.3em;
+    }
+    .state-label {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      min-height: 1.3em;
+    }
+
+    audio { width: 100%; margin: 6px 0 18px; }
+
+    .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    button.pill {
+      font-family: inherit;
+      font-size: 0.92rem;
+      font-weight: 600;
+      border-radius: 999px;
+      padding: 11px 20px;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+    }
+    button.pill.primary {
+      background: var(--accent);
+      color: var(--accent-ink);
+      border-color: var(--accent);
+    }
+    button.pill:disabled { opacity: 0.5; cursor: default; }
+    button.pill:hover:not(:disabled) { filter: brightness(0.98); }
+
+    .error-box {
+      background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+      border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line));
+      color: var(--danger);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.86rem;
+      margin: 4px 0 18px;
+      display: none;
+      text-align: left;
+    }
+
+    .success { display: none; }
+    .success .check {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--accent); color: var(--accent-ink);
+      display: flex; align-items: center; justify-content: center;
+      margin: 4px auto 16px;
+    }
+    .success .check svg { width: 28px; height: 28px; }
+    .success p { color: var(--muted); font-size: 0.9rem; margin: 0 0 20px; }
+
+    #recordScreen.hidden, .success.hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="eyebrow">Spejderlyd</div>
+
+    <div id="loadingScreen">
+      <p class="instructions">Indlæser…</p>
+    </div>
+
+    <div id="invalidScreen" class="hidden">
+      <h1 class="heading" style="font-size:1.3rem;">Ugyldigt link</h1>
+      <p class="instructions">Scan venligst QR-koden for jeres gruppe og spørgsmål igen.</p>
+    </div>
+
+    <div id="recordScreen" class="hidden">
+      <h1 class="heading">Gruppe <span id="groupNum"></span><span class="q">Spørgsmål <span id="questionNum"></span></span></h1>
+      <p class="instructions">Optag jeres svar som en lydbesked — I har op til 60 sekunder. I kan lytte igennem og optage igen, før I sender.</p>
+
+      <div class="error-box" id="errorBox"></div>
+
+      <div class="rec-area">
+        <svg viewBox="0 0 172 172">
+          <circle class="track" cx="86" cy="86" r="80"></circle>
+          <circle class="progress" id="ring" cx="86" cy="86" r="80" stroke-dasharray="502.65" stroke-dashoffset="502.65"></circle>
+        </svg>
+        <button class="rec-btn" id="recBtn" aria-label="Optag">
+          <svg id="recIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a1 1 0 0 0-2 0 5 5 0 0 1-10 0 1 1 0 0 0-2 0 7 7 0 0 0 6 6.92V20H9a1 1 0 0 0 0 2h6a1 1 0 0 0 0-2h-2v-2.08A7 7 0 0 0 19 11z"/></svg>
+        </button>
+      </div>
+
+      <div class="timer" id="timer">Klar til at optage</div>
+      <div class="state-label" id="stateLabel">&nbsp;</div>
+
+      <audio id="player" controls style="display:none;"></audio>
+
+      <div class="actions" id="actions" style="display:none;">
+        <button class="pill" id="retryBtn">Optag igen</button>
+        <button class="pill primary" id="sendBtn">Send besked</button>
+      </div>
+    </div>
+
+    <div class="success hidden" id="successScreen">
+      <div class="check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h1 class="heading" style="font-size:1.3rem;">Sendt!</h1>
+      <p id="successText">Jeres besked er modtaget. Tak!</p>
+      <button class="pill" id="newRecordingBtn">Optag en ny besked</button>
+    </div>
+  </div>
+
+  <script>
+    // Apps Script web app-endepunkt (backend). Opdatér hvis du redeployer.
+    var BACKEND_URL = 'https://script.google.com/macros/s/AKfycbwJGM5ByYgp3H59svMMS-09SQs677wJYAW-kMFB2bxO08NuhvX3WhTyYT29K49c1H-V/exec';
+
+    var GROUP_COUNT = 10;
+    var QUESTION_COUNT = 20;
+    var MAX_SECONDS = 60;
+    var CIRCUMFERENCE = 502.65;
+
+    var params = new URLSearchParams(window.location.search);
+    var GROUP = parseInt(params.get('g'), 10);
+    var QUESTION = parseInt(params.get('q'), 10);
+    var valid = GROUP >= 1 && GROUP <= GROUP_COUNT && QUESTION >= 1 && QUESTION <= QUESTION_COUNT;
+
+    document.getElementById('loadingScreen').classList.add('hidden');
+    if (!valid) {
+      document.getElementById('invalidScreen').classList.remove('hidden');
+    } else {
+      document.getElementById('groupNum').textContent = GROUP;
+      document.getElementById('questionNum').textContent = QUESTION;
+      document.getElementById('successText').textContent = 'Jeres besked til spørgsmål ' + QUESTION + ' er modtaget. Tak!';
+      document.getElementById('recordScreen').classList.remove('hidden');
+      initRecorder();
+    }
+
+    function initRecorder() {
+      var recBtn = document.getElementById('recBtn');
+      var recIcon = document.getElementById('recIcon');
+      var ring = document.getElementById('ring');
+      var timerEl = document.getElementById('timer');
+      var stateLabel = document.getElementById('stateLabel');
+      var player = document.getElementById('player');
+      var actions = document.getElementById('actions');
+      var errorBox = document.getElementById('errorBox');
+      var retryBtn = document.getElementById('retryBtn');
+      var sendBtn = document.getElementById('sendBtn');
+      var recordScreen = document.getElementById('recordScreen');
+      var successScreen = document.getElementById('successScreen');
+      var newRecordingBtn = document.getElementById('newRecordingBtn');
+
+      var mediaRecorder = null;
+      var mediaStream = null;
+      var chunks = [];
+      var recordedBlob = null;
+      var recordedMimeType = '';
+      var startTime = 0;
+      var timerInterval = null;
+      var audioCtx = null, analyser = null, levelRAF = null;
+
+      var STOP_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"></rect></svg>';
+      var MIC_ICON = recIcon.parentElement.innerHTML;
+
+      function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = 'block';
+      }
+      function clearError() {
+        errorBox.style.display = 'none';
+        errorBox.textContent = '';
+      }
+
+      function pickMimeType() {
+        var candidates = [
+          'audio/webm;codecs=opus',
+          'audio/webm',
+          'audio/mp4',
+          'audio/ogg;codecs=opus',
+          'audio/ogg'
+        ];
+        for (var i = 0; i < candidates.length; i++) {
+          if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(candidates[i])) {
+            return candidates[i];
+          }
+        }
+        return '';
+      }
+
+      function supported() {
+        return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+      }
+
+      recBtn.addEventListener('click', function () {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      });
+
+      function startRecording() {
+        clearError();
+        if (!supported()) {
+          showError('Din browser understøtter ikke lydoptagelse. Prøv Chrome eller Safari.');
+          return;
+        }
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+          mediaStream = stream;
+          chunks = [];
+          var mimeType = pickMimeType();
+          var opts = mimeType ? { mimeType: mimeType, audioBitsPerSecond: 32000 } : {};
+          try {
+            mediaRecorder = new MediaRecorder(stream, opts);
+          } catch (e) {
+            mediaRecorder = new MediaRecorder(stream);
+          }
+          recordedMimeType = mediaRecorder.mimeType || mimeType || 'audio/webm';
+
+          mediaRecorder.ondataavailable = function (e) {
+            if (e.data && e.data.size > 0) chunks.push(e.data);
+          };
+          mediaRecorder.onstop = function () {
+            recordedBlob = new Blob(chunks, { type: recordedMimeType });
+            onRecordingReady();
+          };
+
+          mediaRecorder.start();
+          startTime = Date.now();
+          recBtn.classList.add('recording');
+          recIcon.parentElement.innerHTML = STOP_ICON;
+          stateLabel.textContent = 'Optager…';
+          player.style.display = 'none';
+          actions.style.display = 'none';
+          startTimer();
+          startLevelMeter(stream);
+        }).catch(function (err) {
+          if (err && err.name === 'NotAllowedError') {
+            showError('I skal give adgang til mikrofonen for at optage. Tillad mikrofon-adgang i browseren og prøv igen.');
+          } else {
+            showError('Kunne ikke starte optagelsen: ' + (err && err.message ? err.message : err));
+          }
+        });
+      }
+
+      function stopRecording() {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+        if (mediaStream) {
+          mediaStream.getTracks().forEach(function (t) { t.stop(); });
+        }
+        stopTimer();
+        stopLevelMeter();
+        recBtn.classList.remove('recording');
+      }
+
+      function onRecordingReady() {
+        recIcon.parentElement.innerHTML = MIC_ICON;
+        stateLabel.textContent = 'Lyt igennem, før I sender';
+        var url = URL.createObjectURL(recordedBlob);
+        player.src = url;
+        player.style.display = 'block';
+        actions.style.display = 'flex';
+        timerEl.textContent = 'Optagelse klar';
+        ring.style.strokeDashoffset = CIRCUMFERENCE;
+      }
+
+      function startTimer() {
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 100);
+      }
+      function stopTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      function updateTimer() {
+        var elapsed = (Date.now() - startTime) / 1000;
+        if (elapsed >= MAX_SECONDS) {
+          elapsed = MAX_SECONDS;
+          stopRecording();
+        }
+        timerEl.textContent = formatTime(elapsed) + ' / ' + formatTime(MAX_SECONDS);
+        var frac = elapsed / MAX_SECONDS;
+        ring.style.strokeDashoffset = CIRCUMFERENCE * (1 - frac);
+      }
+      function formatTime(s) {
+        var m = Math.floor(s / 60);
+        var sec = Math.floor(s % 60);
+        return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+      }
+
+      function startLevelMeter(stream) {
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          var source = audioCtx.createMediaStreamSource(stream);
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 256;
+          source.connect(analyser);
+          var data = new Uint8Array(analyser.frequencyBinCount);
+          var tick = function () {
+            analyser.getByteFrequencyData(data);
+            var sum = 0;
+            for (var i = 0; i < data.length; i++) sum += data[i];
+            var avg = sum / data.length;
+            var scale = 1 + Math.min(avg / 255, 1) * 0.12;
+            recBtn.style.transform = 'scale(' + scale.toFixed(3) + ')';
+            levelRAF = requestAnimationFrame(tick);
+          };
+          tick();
+        } catch (e) {
+          // level meter er kun kosmetisk — ignorér fejl
+        }
+      }
+      function stopLevelMeter() {
+        if (levelRAF) cancelAnimationFrame(levelRAF);
+        levelRAF = null;
+        recBtn.style.transform = '';
+        if (audioCtx) {
+          try { audioCtx.close(); } catch (e) {}
+          audioCtx = null;
+        }
+      }
+
+      retryBtn.addEventListener('click', function () {
+        recordedBlob = null;
+        player.style.display = 'none';
+        actions.style.display = 'none';
+        stateLabel.textContent = ' ';
+        timerEl.textContent = 'Klar til at optage';
+        ring.style.strokeDashoffset = CIRCUMFERENCE;
+      });
+
+      sendBtn.addEventListener('click', function () {
+        if (!recordedBlob) return;
+        clearError();
+        sendBtn.disabled = true;
+        retryBtn.disabled = true;
+        stateLabel.textContent = 'Sender…';
+
+        var reader = new FileReader();
+        reader.onloadend = function () {
+          var base64 = String(reader.result).split(',')[1];
+          fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              group: GROUP,
+              question: QUESTION,
+              audio: base64,
+              mimeType: recordedMimeType
+            })
+          }).then(function (res) { return res.json(); })
+            .then(function (res) {
+              if (res && res.ok) {
+                recordScreen.classList.add('hidden');
+                successScreen.classList.remove('hidden');
+              } else {
+                sendBtn.disabled = false;
+                retryBtn.disabled = false;
+                stateLabel.textContent = 'Lyt igennem, før I sender';
+                showError('Beskeden kunne ikke sendes. Prøv igen.');
+              }
+            })
+            .catch(function (err) {
+              sendBtn.disabled = false;
+              retryBtn.disabled = false;
+              stateLabel.textContent = 'Lyt igennem, før I sender';
+              showError('Beskeden kunne ikke sendes: ' + (err && err.message ? err.message : err));
+            });
+        };
+        reader.readAsDataURL(recordedBlob);
+      });
+
+      newRecordingBtn.addEventListener('click', function () {
+        successScreen.classList.add('hidden');
+        recordScreen.classList.remove('hidden');
+        recordedBlob = null;
+        player.style.display = 'none';
+        actions.style.display = 'none';
+        stateLabel.textContent = ' ';
+        timerEl.textContent = 'Klar til at optage';
+        ring.style.strokeDashoffset = CIRCUMFERENCE;
+        sendBtn.disabled = false;
+        retryBtn.disabled = false;
+      });
+
+      if (!supported()) {
+        showError('Din browser understøtter ikke lydoptagelse. Prøv Chrome eller Safari.');
+        recBtn.disabled = true;
+      }
+    }
+  </script>
+</body>
+</html>
