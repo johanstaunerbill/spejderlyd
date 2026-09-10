@@ -234,8 +234,8 @@
       <div class="check">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
       </div>
-      <h1 class="heading" style="font-size:1.3rem;">Sendt!</h1>
-      <p id="successText">Jeres besked er modtaget. Tak!</p>
+      <h1 class="heading" style="font-size:1.3rem;">Tak for jeres lyd besvarelse!</h1>
+      <p id="successText">Jeres besked er modtaget.</p>
       <button class="pill" id="newRecordingBtn">Optag en ny besked</button>
     </div>
   </div>
@@ -260,7 +260,7 @@
     } else {
       document.getElementById('groupNum').textContent = GROUP;
       document.getElementById('questionNum').textContent = QUESTION;
-      document.getElementById('successText').textContent = 'Jeres besked til spørgsmål ' + QUESTION + ' er modtaget. Tak!';
+      document.getElementById('successText').textContent = 'Jeres svar på spørgsmål ' + QUESTION + ' er modtaget.';
       document.getElementById('recordScreen').classList.remove('hidden');
       initRecorder();
     }
